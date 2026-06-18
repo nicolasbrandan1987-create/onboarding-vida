@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Onboarding VIDA · Panel SSVV</title>
+<style>
+  :root{
+    --ink:#0f1b2d;--ink-soft:#3a4a5f;--paper:#f4f6f9;--card:#ffffff;--line:#e1e7ef;
+    --brand:#c8102e;--brand-deep:#9a0c23;
+    --green:#1f9d5b;--green-bg:#e6f5ec;
+    --amber:#e0a000;--amber-bg:#fcf3da;
+    --red:#d23b3b;--red-bg:#fbe8e8;
+    --shadow:0 1px 3px rgba(15,27,45,.06),0 8px 24px rgba(15,27,45,.05);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:900px;margin:0 auto;padding:0 18px}
+  header{background:linear-gradient(135deg,#0f1b2d 0%,#1d3354 100%);color:#fff;padding:22px 0 18px}
+  h1{font-size:22px;font-weight:700;margin-top:4px}
+  .sub{color:#b9c8de;font-size:13px;margin-top:3px}
+  .ssvv-tag{display:inline-block;background:var(--brand);color:#fff;font-size:12px;font-weight:700;
+    padding:3px 10px;border-radius:20px;margin-top:10px}
+
+  .loading{text-align:center;padding:60px;color:var(--ink-soft);font-size:14px}
+  .error-box{background:var(--red-bg);border:1px solid #f5c6c6;border-radius:12px;padding:16px;
+    color:var(--red);font-size:13px;margin:20px 0}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:18px 20px;box-shadow:var(--shadow);margin-bottom:16px}
+  .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .card-head h2{font-size:15px;font-weight:700}
+  .badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px}
+  .fA{background:#eef4ff;color:#3b6fd2}.fB{background:#f3eeff;color:#7b4fd2}
+  .fC{background:#fef0e6;color:#d2783b}.fD{background:#e6f7ee;color:#1f9d5b}
+  .status-pill{font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:20px}
+  .ok{background:var(--green-bg);color:var(--green)}
+  .risk{background:var(--red-bg);color:var(--red)}
+  .watch{background:var(--amber-bg);color:var(--amber)}
+
+  /* Actividad */
+  .act-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+  .act-cell{background:#fafbfd;border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center}
+  .act-cell .lbl{font-size:11px;color:var(--ink-soft);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .act-cell input{width:100%;font-size:28px;font-weight:750;text-align:center;border:none;
+    background:transparent;color:var(--ink);font-family:inherit;margin-top:4px}
+  .act-cell input:focus{outline:none;color:var(--brand-deep)}
+  .act-cell .meta{font-size:11px;color:var(--ink-soft);margin-top:2px}
+
+  /* Formacion */
+  .check-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .cc-tag{font-size:10.5px;font-weight:700;color:#fff;background:var(--ink);padding:2px 7px;
+    border-radius:5px;letter-spacing:.03em;display:inline-block;margin-bottom:8px}
+  .chk{font-size:13px;display:flex;align-items:center;gap:8px;padding:6px 0;
+    border-top:1px dashed var(--line);cursor:pointer;user-select:none;transition:opacity .15s}
+  .chk:first-of-type{border-top:none}
+  .chk:hover{opacity:.75}
+  .chk .ic{width:18px;height:18px;border-radius:5px;display:inline-flex;align-items:center;
+    justify-content:center;font-size:10px;flex-shrink:0;font-weight:800;transition:all .2s}
+  .chk.done{color:var(--ink)}.chk.done .ic{background:var(--green);color:#fff}
+  .chk.pending{color:#aab4c2}.chk.pending .ic{border:1.5px solid #c7cfdb}
+
+  .save-btn{width:100%;background:var(--brand);color:#fff;border:none;border-radius:10px;
+    padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:6px}
+  .save-btn:hover{background:var(--brand-deep)}
+  .save-btn:disabled{background:#ccc;cursor:not-allowed}
+  .saved-msg{text-align:center;font-size:13px;color:var(--green);font-weight:600;
+    padding:8px;opacity:0;transition:opacity .3s}
+  .saved-msg.show{opacity:1}
+
+  footer{padding:24px 0 40px;text-align:center;color:#9aa6b5;font-size:12px}
+  @media(max-width:600px){.act-grid{grid-template-columns:1fr}.check-cols{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#9db4d4;font-weight:600">Onboarding VIDA &middot; Panel Supervisor</div>
+    <h1>Seguimiento de asesores nuevos</h1>
+    <div class="sub">Carga cada viernes &middot; prospectos, entrevistas y p&oacute;lizas de la semana</div>
+    <div class="ssvv-tag" id="ssvv-label">Cargando...</div>
+  </div>
+</header>
+
+<div class="wrap" style="padding-top:24px">
+  <div class="loading" id="loading">Cargando asesores...</div>
+  <div class="error-box" id="error-box" style="display:none"></div>
+  <div id="lista"></div>
+</div>
+
+<footer>Onboarding VIDA &middot; Swiss Medical Group</footer>
+
+<script>
+const AS_URL = "https://script.google.com/macros/s/AKfycbzoUFvA__X6fTMjgfnrSyoWT0vAGewTc22FXvUECQ-P2kCFK-UBG5CekeMszhis7xqoJg/exec";
+
+// El SSVV se identifica por parámetro URL: ?ssvv=quevedo
+var urlParams = new URLSearchParams(window.location.search);
+var ssvvParam = urlParams.get("ssvv") || "";
+
+var CONFIG = {};
+var ASESORES = [];
+
+function jsonp(params, cb) {
+  var cbName = "cb_" + Date.now();
+  params.callback = cbName;
+  var qs = Object.keys(params).map(function(k){ return k+"="+encodeURIComponent(params[k]); }).join("&");
+  var s = document.createElement("script");
+  s.src = AS_URL + "?" + qs;
+  window[cbName] = function(data){ cb(data); delete window[cbName]; document.head.removeChild(s); };
+  s.onerror = function(){ cb({ok:false,error:"Error de red"}); };
+  document.head.appendChild(s);
+}
+
+function metaParaFase(fase, cfg) {
+  if (fase === "A") return { campo: "prospectos", meta: Number(cfg.meta_prospectos)||30, label: "Prospectos cargados" };
+  if (fase === "B") return { campo: "entrevistas", meta: Number(cfg.meta_entrevistas_b)||4, label: "Entrevistas / semana" };
+  if (fase === "C") return { campo: "entrevistas", meta: Number(cfg.meta_entrevistas_c)||8, label: "Entrevistas / semana" };
+  return { campo: "polizas", meta: Number(cfg.meta_polizas)||2, label: "Pólizas cerradas" };
+}
+
+function estado(actual, meta) {
+  if (!actual) return "sin-datos";
+  if (actual >= meta) return "ok";
+  if (actual >= meta * 0.5) return "watch";
+  return "risk";
+}
+
+function renderAsesor(a) {
+  var m = metaParaFase(a.fase, CONFIG);
+  var valActual = a.carga_actual ? Number(a.carga_actual[m.campo]) : null;
+  var st = estado(valActual, m.meta);
+  var pillClass = st === "ok" ? "ok" : st === "watch" ? "watch" : st === "risk" ? "risk" : "watch";
+  var pillText = st === "ok" ? "En meta" : st === "watch" ? "Atenci&oacute;n" : st === "risk" ? "Riesgo" : "Sin datos";
+
+  var hitosHTML = "";
+  var fases = [
+    { tag: "FASE A", items: ["Conocer la compania","Life Planning","Amatista","Zafiro","Excellent Savings","AP"] },
+    { tag: "FASE B", items: ["Cobranzas","Suscripcion","Cotizador"] },
+    { tag: "FASE C", items: ["Endosos","Carga de pendientes","Onboarding OV"] },
+  ];
+  fases.forEach(function(f) {
+    hitosHTML += '<div><span class="cc-tag">'+f.tag+'</span>';
+    f.items.forEach(function(item) {
+      var hito = (a.formacion_hitos||[]).find(function(h){ return h.item === item; });
+      var done = hito && hito.completado === "SI";
+      hitosHTML += '<div class="chk '+(done?"done":"pending")+'" onclick="toggleHito(\''+a.id+'\',\''+item+'\',this)">'
+        +'<span class="ic">'+(done?"&#10003;":"")+'</span>'+item+'</div>';
+    });
+    hitosHTML += '</div>';
+  });
+
+  var completados = (a.formacion_hitos||[]).filter(function(h){return h.completado==="SI";}).length;
+
+  return '<div class="card" id="card-'+a.id+'">'
+    +'<div class="card-head">'
+    +'<div>'
+    +'<h2>'+a.nombre+'</h2>'
+    +'<div style="font-size:12px;color:var(--ink-soft);margin-top:3px">Fase <span class="badge f'+a.fase+'">'+a.fase+'</span> &middot; Semana '+a.semana+'</div>'
+    +'</div>'
+    +'<span class="status-pill '+pillClass+'">'+pillText+'</span>'
+    +'</div>'
+
+    +'<div class="act-grid">'
+    +'<div class="act-cell"><div class="lbl">Prospectos</div>'
+    +'<input type="number" min="0" id="inp-prosp-'+a.id+'" value="'+(a.carga_actual?a.carga_actual.prospectos:"")+'" placeholder="0">'
+    +'<div class="meta">acumulados</div></div>'
+
+    +'<div class="act-cell"><div class="lbl">Entrevistas</div>'
+    +'<input type="number" min="0" id="inp-entr-'+a.id+'" value="'+(a.carga_actual?a.carga_actual.entrevistas:"")+'" placeholder="0">'
+    +'<div class="meta">esta semana &middot; meta '+m.meta+'</div></div>'
+
+    +'<div class="act-cell"><div class="lbl">P&oacute;lizas</div>'
+    +'<input type="number" min="0" id="inp-pol-'+a.id+'" value="'+(a.carga_actual?a.carga_actual.polizas:"")+'" placeholder="0">'
+    +'<div class="meta">cerradas</div></div>'
+    +'</div>'
+
+    +'<div style="margin-bottom:14px">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em">Formaci&oacute;n &middot; '+completados+'/12</div>'
+    +'<div class="check-cols">'+hitosHTML+'</div>'
+    +'</div>'
+
+    +'<button class="save-btn" onclick="guardar(\''+a.id+'\')">Guardar semana '+a.semana+'</button>'
+    +'<div class="saved-msg" id="saved-'+a.id+'">&#10003; Guardado correctamente</div>'
+    +'</div>';
+}
+
+function init() {
+  if (!ssvvParam) {
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("error-box").style.display = "block";
+    document.getElementById("error-box").textContent = "No se especificó el SSVV en la URL. Usá: ?ssvv=tu_nombre";
+    return;
+  }
+  document.getElementById("ssvv-label").textContent = ssvvParam;
+
+  jsonp({ action: "getConfig" }, function(cfg) {
+    CONFIG = cfg.config || {};
+    jsonp({ action: "getAsesores", ssvv: ssvvParam }, function(res) {
+      document.getElementById("loading").style.display = "none";
+      if (!res.ok) {
+        document.getElementById("error-box").style.display = "block";
+        document.getElementById("error-box").textContent = "Error: " + res.error;
+        return;
+      }
+      ASESORES = res.asesores;
+      if (!ASESORES.length) {
+        document.getElementById("lista").innerHTML = '<div class="card" style="text-align:center;color:var(--ink-soft);padding:40px">No hay asesores nuevos asignados a este SSVV.</div>';
+        return;
+      }
+      document.getElementById("lista").innerHTML = ASESORES.map(renderAsesor).join("");
+    });
+  });
+}
+
+function guardar(id) {
+  var btn = document.querySelector("#card-"+id+" .save-btn");
+  btn.disabled = true; btn.textContent = "Guardando...";
+  var p = Number(document.getElementById("inp-prosp-"+id).value)||0;
+  var e = Number(document.getElementById("inp-entr-"+id).value)||0;
+  var pol = Number(document.getElementById("inp-pol-"+id).value)||0;
+  jsonp({ action:"cargarSemana", id_asesor:id, prospectos:p, entrevistas:e, polizas:pol }, function(res) {
+    btn.disabled = false;
+    var a = ASESORES.find(function(x){return x.id==id;});
+    btn.textContent = "Guardar semana " + (a?a.semana:"");
+    var msg = document.getElementById("saved-"+id);
+    if (res.ok) { msg.textContent = "✓ Guardado correctamente"; msg.style.color="var(--green)"; }
+    else { msg.textContent = "Error: " + res.error; msg.style.color="var(--red)"; }
+    msg.classList.add("show");
+    setTimeout(function(){ msg.classList.remove("show"); }, 3000);
+  });
+}
+
+function toggleHito(id, item, el) {
+  el.style.opacity = "0.4";
+  jsonp({ action:"toggleFormacion", id_asesor:id, item:item }, function(res) {
+    el.style.opacity = "1";
+    if (res.ok) {
+      var done = res.estado === "SI";
+      el.className = "chk " + (done?"done":"pending");
+      el.querySelector(".ic").innerHTML = done ? "&#10003;" : "";
+    }
+  });
+}
+
+init();
+</script>
+</body>
+</html>
